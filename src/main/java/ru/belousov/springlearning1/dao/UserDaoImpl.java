@@ -3,6 +3,7 @@ package ru.belousov.springlearning1.dao;
 
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 
 import org.springframework.stereotype.Repository;
@@ -43,8 +44,13 @@ public class UserDaoImpl implements UserDAO {
         entityManager.merge(user);
     }
 
+
     @Override
     public User getUserById(int id) {
-        return entityManager.find(User.class, id);
+        User user = entityManager.find(User.class, id);
+        if (user == null) {
+            throw new EntityNotFoundException("User with id " + id + " not found.");
+        }
+        return user;
     }
 }

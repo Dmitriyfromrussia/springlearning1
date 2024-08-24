@@ -6,6 +6,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "users")
@@ -16,14 +20,17 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int userId;
 
-    @Column(name = "name") // ,nullable = false
-    //@NonNull //можно уточнить @NonNullApi (область действия = параметры + возвращаемые значения) и / или @NonNullFields
+    @Column(name = "name")
+    @NotBlank(message = "Имя не может быть пустым")
+    @Size(min = 2, max = 15, message = "Имя должно быть между 2 и 15 символами в длину")
     private String userName;
 
     @Column(name = "age")
+    @Min(value = 1, message = "Возраст должен быть больше 1")
     private int userAge;
 
     @Column(name = "email")
+    @Email
     private String userEmail;
 
     @Column(name = "sex")

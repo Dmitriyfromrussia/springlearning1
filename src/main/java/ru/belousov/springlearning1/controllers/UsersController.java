@@ -1,5 +1,6 @@
 package ru.belousov.springlearning1.controllers;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired; //не добавилась компилятором
 import org.springframework.ui.Model; //не Logback!!
 import org.springframework.web.bind.annotation.RequestMapping; // //не добавилась компилятором
@@ -10,7 +11,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import ru.belousov.springlearning1.models.User;
 import ru.belousov.springlearning1.service.UsersService;
 
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
+
 import java.util.List;
+
 
 @Controller
 @RequestMapping("/users") //это Controller mapping
@@ -22,7 +27,7 @@ public class UsersController { // пишем в множественном чи�
         this.usersService = userService;
     }
 
-    @GetMapping() //это Method mapping, значение "/" в скобках можно не указывать
+    @GetMapping //это Method mapping, значение "/" в скобках можно не указывать
     public String showAllUsers(Model model) { // создаем модель в методе и добавляем Лист в качестве атрибута к этой моделе
         List<User> users = usersService.findAll();
         model.addAttribute("userList", users); // помещаем в модель атрибут(если раскоментируес строку выше-- напишем вместо метода allUsers
@@ -37,15 +42,26 @@ public class UsersController { // пишем в множественном чи�
     }
 
     @PostMapping("/add")
-    public String addNewUser(@RequestParam("name") String newUserName,
-                             @RequestParam("age") int newUserAge,
-                             @RequestParam("email") String newUserMail,
-                             @RequestParam("sex") String newUserSex) {
-
-        User newUser = new User(newUserName, newUserAge, newUserMail, newUserSex);
-        usersService.add(newUser);
+    public String addNewUser(@ModelAttribute("newUser") @Valid User newUserFromView,
+                             BindingResult bindingResult, Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("newUser", newUserFromView);
+            return "users/add-data-page"; //возврат на страницу редактирования
+        }
+        usersService.add(newUserFromView); // Сохранение изменений, если формазаполнена согласно @Valid
         return "redirect:/users";
     }
+//второй вариант метода
+//    @PostMapping("/add")
+//    public String addNewUser(@RequestParam("name") String newUserName,
+//                             @RequestParam("age") int newUserAge,
+//                             @RequestParam("email") String newUserMail,
+//                             @RequestParam("sex") String newUserSex) {
+//
+//        User newUser = new User(newUserName, newUserAge, newUserMail, newUserSex);
+//        usersService.add(newUser);
+//        return "redirect:/users";
+//    }
 
     @GetMapping("/edit")
     public String editPage(@RequestParam("id") int id, Model model) {
@@ -55,18 +71,17 @@ public class UsersController { // пишем в множественном чи�
     }
 
     @PostMapping("/edit")
-    public String editUser(@RequestParam("id") int id,
-                           @RequestParam("name") String newUserName,
-                           @RequestParam("age") int newUserAge,
-                           @RequestParam("email") String newUserMail,
-                           @RequestParam("sex") String newUserSex) {
-        User user = new User(newUserName, newUserAge, newUserMail, newUserSex);
-        user.setUserId(id);
-        usersService.edit(user);
+    public String editUser(@ModelAttribute("editUser") @Valid User editUser,
+                           BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "users/edit-data-page"; // Вернуть на страницу редактирования, если есть ошибки
+        }
+
+        usersService.edit(editUser); // Если ошибок нет, сохранить изменения
         return "redirect:/users";
     }
 
-    @GetMapping("/delete")
+    @PostMapping("/delete")
     public String deleteUser(@RequestParam("id") int id) {
         User user = usersService.getById(id);
         usersService.delete(user);
